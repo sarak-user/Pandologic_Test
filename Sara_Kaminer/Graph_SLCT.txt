@@ -1,0 +1,28 @@
+﻿USE [Sara_KaminerContext-20220829221706]
+GO
+
+/****** Object: SqlProcedure [dbo].[Graph_SLCT] Script Date: 04/09/2022 01:20:46 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[Graph_SLCT]
+
+AS
+	select J.DateModify as Date,count(J.JobId) ActiveJobToDay,sum(J.predictedJobViews) PredictedJobViews,JV.JobView
+    --,RANK() OVER (partition by count(J.DateModify) order BY J.DateModify) AS Rank	
+,sum(count(J.JobId)) over (order by J.DateModify) as ActiveJobs
+from Jobs J
+	outer apply(
+		select count(JobViewId) as 'JobView',
+		DateView as DateModify
+		from JobViews
+		where DateView = J.DateModify
+		group by DateView
+	)JV
+	where IsActive = 1
+	group by J.DateModify,JV.JobView
+order by J.DateModify
+RETURN 0
